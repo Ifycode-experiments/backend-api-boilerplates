@@ -4,7 +4,7 @@ import morgan from 'morgan';
 import cors from 'cors';
 import { errorHandler } from './lib/errors/ErrorHandler';
 import { CustomErrorInterface } from './lib/errors/CustomError';
-import { notFoundErr } from './lib/errors/Errors';
+import { NotFoundError } from './lib/errors/Errors';
 import { router as appRouter } from './api/routes/app.route';
 import { router as demoRouter } from './api/routes/demo.route';
 
@@ -26,9 +26,8 @@ app.use('/demo', demoRouter);
 
 
 //========= Throw Route Not Found Error ==========
-app.use((next: NextFunction) => {
-  notFoundErr("Route Not Found")
-  next();
+app.use(() => {
+  throw new NotFoundError("Route Not Found");
 });
 //==========================================
 
