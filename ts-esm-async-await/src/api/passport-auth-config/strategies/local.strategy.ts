@@ -2,6 +2,7 @@ import {Strategy} from 'passport-local';
 import { UserModel as User } from '../../models/user.model';
 import bcrypt from 'bcrypt';
 import { DoneCallback } from 'passport';
+import { NotFoundError } from '../../../lib/errors/Errors'
 
 export const localStrategy = new Strategy(
   {
@@ -12,13 +13,11 @@ export const localStrategy = new Strategy(
     try {
       const user = await User.findOne({email: email}).exec();
       if (!user){
-        const myErr = Error("Invalid Credentials [email]");
-        throw myErr;
+        throw new NotFoundError("Invalid Credentials [email]");
       }
       const passwordMatches = await bcrypt.compare(password, user.password);
       if (!passwordMatches){
-        const myErr = Error("Invalid Credentials [password]");
-        throw myErr;
+        throw new NotFoundError("Invalid Credentials [password]");
       }
       done(null, user);
     } catch (err) {

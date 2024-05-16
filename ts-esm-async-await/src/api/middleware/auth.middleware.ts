@@ -2,7 +2,7 @@ import { NextFunction, Response } from "express";
 import passport from 'passport';
 import { Payload, ReqUser } from '../../types';
 import { UserRole } from "../models/user.model";
-import { unAuthorizedErr } from '../../lib/errors/Errors';
+import { UnAuthorizedError } from '../../lib/errors/Errors';
 
 // -----------------------------------------------------------------------------------------------------------//
 // https://www.sailpoint.com/identity-library/difference-between-authentication-and-authorization/
@@ -14,23 +14,22 @@ import { unAuthorizedErr } from '../../lib/errors/Errors';
 export const authenticateUserWithJWT = (req: ReqUser, res: Response, next: NextFunction) => {
   passport.authenticate('jwt', {session: false},
     (err: Error, payload:Payload, info: {message: string}) => {
-      if (err) {
-        return next(err);
+      try {
+        if (err) {
+          throw err;
+        }
+        if (info) {
+          throw new UnAuthorizedError(info.message);
+        }
+        if (!payload) {
+          throw new UnAuthorizedError("[UNAUTHORIZED] Unknown User Trying to Access This Route\nRedirecting To Login Page");
+        }
+        const { _id, username, role} = payload;
+        req.user = { _id: _id, username: username, role: role}; // replace the req.user parameter with the payload
+        return next();
+      } catch (err) {
+        next(err);
       }
-  
-      if (info) {
-        const myErr = new Error(info.message);
-        return next(myErr);
-      }
-  
-      if (!payload) {
-        const myErr = new Error("[UNAUTHORIZED] Unknown User Trying to Access This Route\nRedirecting To Login Page");
-        return next(myErr);
-      }
-      
-      const { _id, username, role} = payload;
-      req.user = { _id: _id, username: username, role: role}; // replace the req.user parameter with the payload
-      return next();
     }
   )(req, res, next);
 }
@@ -38,14 +37,15 @@ export const authenticateUserWithJWT = (req: ReqUser, res: Response, next: NextF
 
 export const authorizeByUserRoles = (allowedRoles: UserRole[]) => {
   return (req: ReqUser, res: Response, next: NextFunction) => {
-    const { role } = req.user;
-
-    const roleIsVerified = allowedRoles.includes(role);
-
-    if (roleIsVerified) {
-      return next();
+    try {
+      const { role } = req.user;
+      const roleIsVerified = allowedRoles.includes(role);
+      if (roleIsVerified) {
+        return next();
+      }
+      throw new UnAuthorizedError(`only [${allowedRoles}] have access to this route`);
+    } catch (err) {
+      next(err);
     }
-
-    unAuthorizedErr(`only [${allowedRoles}] have access to this route`);
   }
 }

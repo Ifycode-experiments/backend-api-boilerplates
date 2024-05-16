@@ -1,11 +1,10 @@
-import 'express-async-errors';
 import express, { Express, NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
 import cors from 'cors';
 import { errorHandler } from './lib/errors/ErrorHandler';
 import { CustomErrorInterface } from './lib/errors/CustomError';
-import { notFoundErr } from './lib/errors/Errors';
+import { NotFoundError } from './lib/errors/Errors';
 import { router as appRouter } from './api/routes/app.route';
 import { router as demoRouter } from './api/routes/demo.route';
 import { router as userAuthRouter } from './api/routes/user.auth.route';
@@ -34,7 +33,7 @@ app.use('/user', userRouter);
 
 //========= Throw Route Not Found Error ==========
 app.use(() => {
-  notFoundErr("Route Not Found")
+  throw new NotFoundError("Route Not Found");
 });
 //==========================================
 
@@ -42,7 +41,7 @@ app.use(() => {
 //====== Error handler Middleware ==========
 app.use((err: CustomErrorInterface, req: Request, res: Response, next: NextFunction) => {
   errorHandler.handleError(err, res);
-  next()
+  next();
 });
 //==========================================
 
