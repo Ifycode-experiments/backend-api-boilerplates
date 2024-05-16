@@ -1,4 +1,3 @@
-import 'express-async-errors';
 import express, { Express, NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
@@ -27,8 +26,9 @@ app.use('/demo', demoRouter);
 
 
 //========= Throw Route Not Found Error ==========
-app.use(() => {
+app.use((next: NextFunction) => {
   notFoundErr("Route Not Found")
+  next();
 });
 //==========================================
 
@@ -36,7 +36,7 @@ app.use(() => {
 //====== Error handler Middleware ==========
 app.use((err: CustomErrorInterface, req: Request, res: Response, next: NextFunction) => {
   errorHandler.handleError(err, res);
-  next()
+  next();
 });
 //==========================================
 
